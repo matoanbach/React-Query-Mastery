@@ -1,16 +1,23 @@
 import { useState } from "react";
-import { useCreateTask } from "./reactQueryCustomHook";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import customFetch from "./utils";
+import { useCreateTask } from "./reactQueryCustomHooks";
 const Form = () => {
   const [newItemName, setNewItemName] = useState("");
-  const {createTask, isLoading} = useCreateTask();
-
+  const MyQueryClient = useQueryClient();
+  const {createTask, createTaskLoading} = useCreateTask()
   const handleSubmit = (e) => {
     e.preventDefault();
-    createTask(newItemName, {onSuccess: () => {
-      setNewItemName("");
-    }});
-
+    createTask({taskTitle: newItemName}, {
+      onSuccess: () => {
+        console.log("created successfully");
+        MyQueryClient.invalidateQueries({ queryKey: "tasks" });
+        setNewItemName("");
+      },
+      onError: () => {
+        console.log("error occurring when creating task.!");
+      },
+    });
   };
   return (
     <form onSubmit={handleSubmit}>
@@ -22,7 +29,7 @@ const Form = () => {
           value={newItemName}
           onChange={(event) => setNewItemName(event.target.value)}
         />
-        <button type="submit" className="btn" disabled={isLoading}>
+        <button type="submit" className="btn">
           add task
         </button>
       </div>
